@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {gesture, serverUrl, imageUrl, orderChapters} from '../dist/core.js';
-import {ExtensionClient} from '../dist/api.js';
+import {gesture, serverUrl, imageUrl, orderChapters} from '../public/core.js';
+import {ExtensionClient} from '../public/api.js';
 test('gesture directions reject taps and ambiguous diagonals',()=>{
  assert.equal(gesture(-100,10),'nextPage');assert.equal(gesture(100,10),'prevPage');assert.equal(gesture(10,-100),'nextChapter');assert.equal(gesture(10,100),'prevChapter');assert.equal(gesture(20,15),null);assert.equal(gesture(100,100),null);
 });

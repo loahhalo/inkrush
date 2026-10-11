@@ -1,40 +1,33 @@
 # INKRUSH
 
-A phone-first comic reader with a TikTok-like reading flow. Swipe left/right for pages; swipe up/down or use the mouse wheel on the comic canvas for chapters. Desktop arrow keys do the same. F toggles immersive mode. Progress, library, and motion preferences are stored in this browser.
+A comic reader with a TikTok-like flow: swipe left/right to turn pages; swipe up/down or scroll on the reading canvas to change chapters. Arrow keys do the same. F toggles immersive mode. Reading progress and your library stay in this browser.
 
 ## Run
 
-Requires Node.js 20 or newer. No frontend dependencies or build are needed.
+Requires Node.js 22+ and pnpm 11.
 
-```sh
-node preview.mjs
+```
+pnpm install
+pnpm dev
 ```
 
-Open http://127.0.0.1:8080. The original Afterlight demo contains two chapters and six illustrated pages. It runs without a backend.
+Open the local URL printed by the dev server. The reader automatically opens Give My Regards to Black Jack by Shuho Sato from MangaDex, with 127 English chapters at verification. Discover searches the live MangaDex catalog. No API key or separate manga server is required. Availability can change at the source.
 
-## Keiyoushi integration
+## API integration
 
-Keiyoushi publishes Android extension packages, not an HTTP manga API. Suwayomi runs those extensions and exposes the GraphQL endpoint used by this reader.
+Keiyoushi distributes Android source extensions rather than a hosted HTTP API. MangaDex is one of those sources. The reader calls the real MangaDex API through restricted same-origin server routes for metadata, English chapters, page locations, and images. Image endpoints permit only known MangaDex hosts and paths; redirects are refused. Page locations refresh after three minutes or on Retry.
 
-1. Install Docker, then run `docker compose -f backend/compose.yaml up -d`. The supplied config uses Suwayomi preview, matching the current GraphQL schema, and preconfigures the Keiyoushi store. It binds the server to localhost and persists its data in a named volume.
-2. Open http://127.0.0.1:4567. Under Browse → Extensions, install a source you want to use. Configure that source in Suwayomi if required.
-3. In INKRUSH, open Sources / Reader settings. Connect to `http://127.0.0.1:4567` when running the frontend locally.
-4. Discover now shows installed sources, popular comics, paginated search results, chapters, and page images served by Suwayomi.
+Optional other Keiyoushi sources run through Suwayomi. Start `docker compose -f backend/compose.yaml up -d`, open http://127.0.0.1:4567, and install extensions in Browse > Extensions. In INKRUSH Reader settings, enter that server URL. Hosted readers require a reachable HTTPS Suwayomi server. Tokens are kept only in tab memory. The supplied Docker configuration is local-only.
 
-For the hosted HTTPS reader, provide an HTTPS Suwayomi endpoint reachable from your browser. Do not expose the unauthenticated local configuration directly to the internet. Configure authentication on the remotely hosted server. The connection dialog supports a bearer access token held only in tab memory; image requests use Suwayomi's supported token parameter only for the selected server origin. Tokens are never written to local storage. After expiry/reload, reconnect with a fresh token. Basic-auth-only servers and automatic refresh are not supported in this version.
+## Build and verify
 
-Existing Suwayomi servers can add `https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json` in extension repository/store settings. All extension installation and trust decisions stay in Suwayomi's management interface.
+```
+pnpm test
+pnpm build
+```
 
-## Verification
+The Vinext/Sites runtime provides the server routes and serves the reader from public/reader.html. public/mangadex.js implements the live source; public/api.js retains Suwayomi support. lib/mangadex-*.mjs contain restricted proxies. Original Afterlight artwork remains for the optional demo, documented in ASSETS.md.
 
-`node --test tests/*.test.mjs` checks gesture direction/thresholds, URL safety, source ordering, large source IDs, GraphQL error handling, and the adapter's browse-to-image flow with fixtures. A live Suwayomi instance is required to verify extension execution and source availability; the static hosted preview does not run Android extensions itself.
+Tests cover gestures, URL restrictions, adapter flows, chapter deduplication, page cache refresh, and image proxy behavior. Live browser verification checks real page images, page turns, chapter changes, and catalog search.
 
-## Files
-
-- `dist/`: standalone website, ready for static hosting.
-- `dist/api.js`: Suwayomi GraphQL client.
-- `dist/core.js`: gesture and URL helpers.
-- `backend/compose.yaml`: optional extension runtime.
-- `ASSETS.md`: original demo artwork prompts and generation details.
-
-Reference: https://github.com/keiyoushi/extensions and https://github.com/Suwayomi/Suwayomi-Server. Third-party content remains subject to the source's availability and terms.
+Sources: https://github.com/keiyoushi/extensions and https://api.mangadex.org/docs/.
