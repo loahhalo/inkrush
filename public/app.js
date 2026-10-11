@@ -1,6 +1,7 @@
 import {gesture, clamp, publicImageUrl} from './core.js';
 import {ExtensionClient} from './api.js';
 import {MangaDexClient,FEATURED_MANGA} from './mangadex.js';
+import {ChapterSoundtrack} from './music.js';
 const $ = (s) => document.querySelector(s);
 const el = (tag, className, text) => {const item=document.createElement(tag);if(className)item.className=className;if(text!==undefined)item.textContent=text;return item;};
 const icon = (name) => {const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');const use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttribute('href','#i-'+name);svg.append(use);return svg;};
@@ -10,6 +11,7 @@ const demo = {id:'afterlight',title:'Afterlight',author:'An original short story
 let manga=demo, chapter=0, page=0, busy=false, operation=0, client=new MangaDexClient(), sources=[], sourceId=readStore('sourceId',''), saved=readStore('library',[]), bookmarks=readStore('bookmarks',{}), catalogPage=1, catalogQuery='', catalogItems=[], catalogHasNext=false;
 let toastTimeout, hintTimeout, wheelTimer, wheelDelta=0, wheelLock=0, pointer=null, modalOp=0;
 const cache=new Map();
+const soundtrack=new ChapterSoundtrack();
 function key(){return (manga.demo?'demo':client?.base)+':'+manga.id;}
 function toast(text){$('#toast').textContent=text;$('#toast').classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('#toast').classList.remove('show'),2700);}
 function pages(){return manga.chapters[chapter].pages || [];}
@@ -32,6 +34,7 @@ function render(){
  if(manga.demo){$('#demo-page').style.backgroundImage=`url('${current.art}')`;$('#demo-page').style.backgroundPosition=`${page*50}% center`;$('#demo-page').setAttribute('aria-label',`${manga.title}, chapter ${chapter+1}, page ${page+1}. Original black-and-white manga.`);}
  else {const img=$('#comic-image');img.alt=`${manga.title}, ${current.name}, page ${page+1}`;img.src=pages()[page];const upcoming=pages()[page+1];if(upcoming){const preload=new Image();preload.src=upcoming;}}
  updateSave();persist();
+ soundtrack.update({source:client?.base||'demo',mangaId:manga.id,mangaTitle:manga.title,chapterId:current.id,chapterNumber:current.chapterNumber??chapter+1,title:current.name,description:manga.description,genres:manga.genre||[],pages:manga.demo?[]:pages()});
 }
 $('#comic-image').addEventListener('error',()=>{if(!manga.demo){$('#page-error').hidden=false;$('#comic-image').hidden=true;}});
 function turnPage(delta){if(busy)return;const next=page+delta;if(next<0){toast('You’re on the first page');return;}if(next>=pages().length){toast(chapter<manga.chapters.length-1?'Chapter finished. Scroll down for the next one.':'You’re all caught up. Find another story in Discover.');return;}page=next;dismissHint();render();animate(delta<0?'right':'left');}
