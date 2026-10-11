@@ -12,6 +12,12 @@ test('Page cache refreshes image locations and uses same-origin requests',async(
  client.request=async()=>{requests++;return {baseUrl:'https://cdn.mangadex.network',chapter:{hash:'abcdef',dataSaver:['page.jpg']}};};
  const pages=await client.pages('chapter');assert.match(pages[0],/^\/api\/mangadex-image\?url=/);assert.equal(client.image(pages[0]),pages[0]);await client.pages('chapter');assert.equal(requests,1);await client.pages('chapter',true);assert.equal(requests,2);
 });
+test('Chapters without volume labels stay in chapter-number order',()=>{
+ const make=(id,chapter,volume)=>({id,attributes:{chapter,volume,pages:20,publishAt:'2020-01-01'}});
+ const entries=[make('late','65',null),make('first','1','1'),make('second','2','1')];
+ assert.deepEqual(normalizeChapters([...entries]).map(c=>c.id),['first','second','late']);
+ assert.deepEqual(normalizeChapters([...entries],true).map(c=>c.id),['late','first','second']);
+});
 test('Proxies reject unrelated targets before fetching',async()=>{
  assert.equal((await proxyMangaDex(new Request('https://reader.test/api'),['admin'])).status,404);
  for(const url of ['https://example.com/page.jpg','http://uploads.mangadex.org/covers/a/b.jpg','https://uploads.mangadex.org.evil.test/covers/a/b.jpg','https://user:secret@uploads.mangadex.org/covers/a/b.jpg'])assert.equal((await proxyImage(new Request('https://reader.test/api/mangadex-image?url='+encodeURIComponent(url)))).status,400);

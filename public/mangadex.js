@@ -4,9 +4,9 @@ export function normalizeManga(item) {
   const title=a.title.en||a.altTitles?.find(t=>t.en)?.en||Object.values(a.title)[0]||'Untitled';
   return {id:item.id,title,description:(a.description.en||Object.values(a.description)[0]||'').replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/[*_#]/g,''),author:item.relationships?.find(r=>r.type==='author')?.attributes?.name||'',genre:a.tags?.filter(t=>t.attributes.group==='genre').map(t=>t.attributes.name.en)||[],poster:cover?`https://uploads.mangadex.org/covers/${item.id}/${cover}.256.jpg`:'',sourceLabel:'MANGADEX · LIVE',sourceUrl:`https://mangadex.org/title/${item.id}`};
 }
-export function normalizeChapters(data) {
+export function normalizeChapters(data,legacyVolumeOrder=false) {
   const seen=new Set();
-  return data.filter(c=>c.attributes.pages>0&&!c.attributes.externalUrl&&!c.attributes.isUnavailable).sort((a,b)=>(Number(a.attributes.volume)||0)-(Number(b.attributes.volume)||0)||(Number(a.attributes.chapter)||0)-(Number(b.attributes.chapter)||0)||a.attributes.publishAt.localeCompare(b.attributes.publishAt)).filter(c=>{const k=`${c.attributes.volume}:${c.attributes.chapter}:${c.attributes.chapter===null?c.id:''}`;if(seen.has(k))return false;seen.add(k);return true;}).map((c,i)=>({id:c.id,chapterNumber:c.attributes.chapter??i+1,name:c.attributes.title||`Chapter ${c.attributes.chapter??i+1}`,pageCount:c.attributes.pages}));
+  return data.filter(c=>c.attributes.pages>0&&!c.attributes.externalUrl&&!c.attributes.isUnavailable).sort((a,b)=>(legacyVolumeOrder?(Number(a.attributes.volume)||0)-(Number(b.attributes.volume)||0)||(Number(a.attributes.chapter)||0)-(Number(b.attributes.chapter)||0):(a.attributes.chapter==null?Infinity:Number(a.attributes.chapter))-(b.attributes.chapter==null?Infinity:Number(b.attributes.chapter))||(Number(a.attributes.volume)||0)-(Number(b.attributes.volume)||0))||a.attributes.publishAt.localeCompare(b.attributes.publishAt)).filter(c=>{const k=`${c.attributes.volume}:${c.attributes.chapter}:${c.attributes.chapter===null?c.id:''}`;if(seen.has(k))return false;seen.add(k);return true;}).map((c,i)=>({id:c.id,chapterNumber:c.attributes.chapter??i+1,name:c.attributes.title||`Chapter ${c.attributes.chapter??i+1}`,pageCount:c.attributes.pages}));
 }
 export class MangaDexClient {
   constructor(){this.base='https://api.mangadex.org';this.kind='mangadex';this.pageCache=new Map();}
@@ -30,10 +30,10 @@ export class MangaDexClient {
     const metadata=await this.request('/manga/'+id,{'includes[]':['cover_art','author']});
     const all=[];let offset=0,total=1;
     while(offset<total&&offset<10000){const feed=await this.request('/manga/'+id+'/feed',{'translatedLanguage[]':'en','order[volume]':'asc','order[chapter]':'asc',limit:500,offset,includeEmptyPages:0,includeFutureUpdates:0,includeExternalUrl:0});all.push(...feed.data);total=feed.total;offset+=feed.limit;if(!feed.data.length)break;}
-    const chapters=normalizeChapters(all);
+    const legacyOrder=normalizeChapters([...all],true).map(c=>c.id);const chapters=normalizeChapters(all);
     if(!chapters.length)throw new Error('No readable English chapters are available for this title. Try another story.');
     const manga=normalizeManga(metadata.data);manga.poster=this.image(manga.poster);
-    return {...manga,chapters};
+    return {...manga,chapters,legacyOrder};
   }
   async pages(id,refresh=false) {
     const cached=this.pageCache.get(id);if(!refresh&&cached&&Date.now()-cached.at<180000)return cached.pages;
