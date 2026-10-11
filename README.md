@@ -32,6 +32,12 @@ Tests cover gestures, URL restrictions, adapter flows, chapter deduplication, pa
 
 Sources: https://github.com/keiyoushi/extensions and https://api.mangadex.org/docs/.
 
+## Discover and chapter navigation
+
+Trending ranks the most followed MangaDex titles created in the last 30 days. New sorts catalog additions by creation date; Popular shows all-time followed count. Categories require available English chapters. Search is independent of category filters, requests relevance-ranked results after a 350 ms typing pause, cancels outdated requests, and supports IME input. Suggestions combine live results with titles opened in this browser, ranking exact/prefix matches ahead of substring and minor typo matches. Frequency and recency personalize equally relevant suggestions. Up/down and Enter select a suggestion; Escape dismisses it. History is limited to 60 titles and remains in local storage.
+
+The chapter dialog has a fixed header and bounded scrolling, chapter/title filtering, oldest/newest sorting, an active chapter marker, and Current chapter jump. Reader sequence stays unchanged when sorting the list. Decimal chapters sort numerically, volume-less duplicates merge with their matching numbered volume, and old chapter IDs remain aliases for bookmarks. Distinct numbered volumes remain separate; unnumbered extras are labelled EX rather than assigned invented chapter numbers.
+
 ## Chapter soundtrack
 
 Open the floating music button, then Play soundtrack. YouTube playback uses the official IFrame Player API without an API key. A curated six-track instrumental library by Scott Buckley is ranked against six moods. Licensed audio is an alternative source that streams the composer's CC BY 4.0 files, with track credits displayed in the reader. You can paste another YouTube video URL for the current chapter.
