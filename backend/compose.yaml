@@ -1,0 +1,13 @@
+services:
+  suwayomi:
+    image: ghcr.io/suwayomi/suwayomi-server:preview
+    environment:
+      TZ: Asia/Bangkok
+      EXTENSION_STORES: '["https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json"]'
+    ports:
+      - "127.0.0.1:4567:4567"
+    volumes:
+      - suwayomi-data:/home/suwayomi/.local/share/Tachidesk
+    restart: unless-stopped
+volumes:
+  suwayomi-data:
