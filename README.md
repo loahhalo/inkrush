@@ -1,5 +1,9 @@
 # INKRUSH
 
+**Live app:** https://reader-production-ff95.up.railway.app/reader#discover · **Private GitHub:** https://github.com/loahhalo/inkrush
+
+The reader, gateway and persistent Indonesian source backend now run on Railway. Choose **Komiku · Suwayomi · ID** for the verified One Piece, One Punch Man and Solo Leveling chapters. See [Railway deployment and operations](docs/RAILWAY.md).
+
 A comic reader with a TikTok-like flow: swipe left/right to turn pages; swipe up/down or scroll on the reading canvas to change chapters. Arrow keys do the same. F toggles immersive mode. Reading progress and your library stay in this browser.
 
 ## Run

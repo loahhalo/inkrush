@@ -1,5 +1,7 @@
 # Free local INKRUSH + Suwayomi
 
+The optional local setup below is preserved. A full hosted Railway deployment is now available; see [RAILWAY.md](RAILWAY.md) for its URL and operations.
+
 No hosting account, Docker installation, domain purchase, or paid service is required. The reader and Suwayomi run on this Windows PC. The public Vercel website cannot reach a server bound to this PC's loopback address; use the local reader for these additional sources.
 
 ## Open and restart

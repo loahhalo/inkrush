@@ -1,0 +1,15 @@
+.git
+node_modules
+.runtime
+.sites-runtime
+.openai
+.codex
+.agents
+.next
+.vinext
+.wrangler
+dist
+outputs
+work
+archive
+.env*
