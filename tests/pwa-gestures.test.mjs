@@ -4,6 +4,14 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import manifest from '../platform/app/manifest.ts';
 import {swipeAction,wheelChapter} from '../platform/components/reader-gestures.ts';
+import {pageFrameHeight} from '../platform/components/reader-layout.ts';
+
+test('page canvas and controls fit above mobile navigation on short and tall viewports',()=>{
+  for(const [height,top,nav] of [[668,242.5,60.8],[844,220,61],[720,270,0]]){
+    const frame=pageFrameHeight(height,top,nav);
+    assert.ok(top+frame+80<=height-nav+.01);
+  }
+});
 
 test('original swipe contract: left/right change page, up/down change chapter',()=>{
   assert.deepEqual(swipeAction(-180,12),{kind:'page',delta:1});

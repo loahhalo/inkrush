@@ -1,6 +1,7 @@
 'use client';
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState} from 'react';
 import PagedImage from './paged-image.tsx';
+import {pageFrameHeight} from './reader-layout.ts';
 import {swipeAction,wheelChapter,type WheelState} from './reader-gestures.ts';
 import type {ComicDetail,Chapter,Page,Comic} from '../server/types.ts';
 import {api,asComic,BufferedImage,ErrorMessage,Icon,readStore,writeStore,relativeDate} from './shared.tsx';
@@ -15,6 +16,7 @@ export default function Reader({comic,initialChapter,initialPage=0,initialSlice=
   const changeChapter=useCallback((delta:number)=>{const next=initialChapter+delta;if(next>=0&&next<comic.chapters.length&&!loading){onChapter(next);window.scrollTo({top:0});}},[initialChapter,comic.chapters.length,onChapter,loading]);
   useEffect(()=>{function key(e:KeyboardEvent){if((e.target as HTMLElement)?.closest('input,textarea,select,button')||drawer)return;if(e.key==='ArrowRight'){e.preventDefault();advance(1);}if(e.key==='ArrowLeft'){e.preventDefault();advance(-1);}if(e.key==='ArrowDown'&&mode==='page'){e.preventDefault();changeChapter(1);}if(e.key==='ArrowUp'&&mode==='page'){e.preventDefault();changeChapter(-1);}}window.addEventListener('keydown',key);return ()=>window.removeEventListener('keydown',key);},[advance,changeChapter,mode,drawer]);
   useEffect(()=>{const node=frame.current;if(!node||mode!=='page')return;function scroll(e:WheelEvent){if(e.ctrlKey||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;e.preventDefault();const delta=wheelChapter(wheel.current,e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?node!.clientHeight:1),Date.now());if(delta)changeChapter(delta);}node.addEventListener('wheel',scroll,{passive:false});return ()=>node.removeEventListener('wheel',scroll);},[mode,changeChapter]);
+  useLayoutEffect(()=>{const node=frame.current;if(!node||mode!=='page')return;function measure(){if(!node)return;const nav=document.querySelector('.mobile-nav')?.getBoundingClientRect().height||0;const top=node.getBoundingClientRect().top+window.scrollY;node.style.setProperty('--reader-height',pageFrameHeight(window.visualViewport?.scale===1?window.visualViewport.height:window.innerHeight,top,nav)+'px');}measure();const observer=new ResizeObserver(measure);const toolbar=node.parentElement?.querySelector('.reader-toolbar');if(toolbar)observer.observe(toolbar);window.addEventListener('resize',measure);window.visualViewport?.addEventListener('resize',measure);return ()=>{observer.disconnect();window.removeEventListener('resize',measure);window.visualViewport?.removeEventListener('resize',measure);};},[mode,notice]);
   useEffect(()=>{const dialog=drawerRef.current;if(drawer)dialog?.showModal();else dialog?.close();},[drawer]);
   if(!chapter)return <ErrorMessage message="This chapter is unavailable." retry={()=>location.hash='title/'+encodeURIComponent(comic.id)}/>;
   const matching=comic.chapters.map((c,i)=>({c,i})).filter(({c})=>!chapterFilter||String(c.chapterNumber??'extra').includes(chapterFilter)||c.name.toLowerCase().includes(chapterFilter.toLowerCase()));
