@@ -1,0 +1,31 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "framework": null,
+  "buildCommand": "node scripts/configure-hosted.mjs",
+  "installCommand": "",
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/reader"
+    },
+    {
+      "source": "/api/mangadex/:path*",
+      "destination": "/api/comics?path=:path*"
+    }
+  ],
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 60,
+      "includeFiles": "lib/data/**"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/trending-sync",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

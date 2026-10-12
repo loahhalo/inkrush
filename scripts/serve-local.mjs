@@ -1,0 +1,26 @@
+import http from 'node:http';
+import {handleGateway,handleGatewayImage} from '../lib/gateway.mjs';
+import {handleTrending,handleTrendingSync} from '../lib/trending.mjs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {proxyMangaDex} from '../lib/mangadex-proxy.mjs';
+import {proxyImage} from '../lib/mangadex-image.mjs';
+import {handleWebtoons,proxyWebtoonImage} from '../lib/webtoons.mjs';
+import {handleCentral,proxyCentralImage} from '../lib/weebcentral.mjs';
+const root=path.resolve(import.meta.dirname,'../public');
+const port=Number(process.env.INKRUSH_PORT||8082);
+const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'};
+http.createServer(async(req,res)=>{try{const url=new URL(req.url,'http://127.0.0.1:'+port);let response;
+ if(url.pathname==='/api/gateway')response=await handleGateway(new Request(url));
+ else if(url.pathname==='/api/gateway-image')response=await handleGatewayImage(new Request(url));
+ else if(url.pathname==='/api/trending')response=await handleTrending(new Request(url));
+ else if(url.pathname==='/api/trending-sync')response=await handleTrendingSync(new Request(url));
+ else if(url.pathname==='/api/central')response=await handleCentral(new Request(url));
+ else if(url.pathname==='/api/central-image')response=await proxyCentralImage(new Request(url));
+ else if(url.pathname==='/api/webtoons')response=await handleWebtoons(new Request(url));
+ else if(url.pathname==='/api/webtoon-image')response=await proxyWebtoonImage(new Request(url));
+ else if(url.pathname.startsWith('/api/mangadex/'))response=await proxyMangaDex(new Request(url),url.pathname.slice('/api/mangadex/'.length).split('/'));
+ else if(url.pathname==='/api/mangadex-image')response=await proxyImage(new Request(url));
+ else{const file=path.resolve(root,'.'+(url.pathname==='/'||url.pathname==='/reader'?'/reader.html':url.pathname));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}response=new Response(await fs.readFile(file),{headers:{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'}});}
+ res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));if(url.pathname.startsWith('/api/'))console.log(response.status,url.pathname);
+ }catch(error){res.writeHead(500).end(String(error));console.error(error.message);}}).listen(port,'127.0.0.1',()=>console.log('Local reader http://127.0.0.1:'+port+'/reader'));

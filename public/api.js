@@ -3,9 +3,9 @@ export class ExtensionClient {
   constructor(base, token = '') { this.base = serverUrl(base); this.token = token; }
   async request(query, variables = {}) {
     const headers = {'Content-Type':'application/json'};
-    if (this.token) headers.Authorization = `Bearer ${this.token}`;
+    if (this.authorization || this.token) headers.Authorization = this.authorization || `Bearer ${this.token}`;
     let response;
-    try { response = await fetch(this.base + '/api/graphql', {method:'POST', headers, body:JSON.stringify({query,variables}), signal:AbortSignal.timeout(30000)}); }
+    try { response = await fetch(this.base + '/api/graphql', {method:'POST', redirect:'error', headers, body:JSON.stringify({query,variables}), signal:AbortSignal.timeout(30000)}); }
     catch { throw new Error('Could not reach the server. Check its URL, HTTPS, and CORS settings.'); }
     if (!response.ok) throw new Error(`Server returned ${response.status}. Check your connection and authentication.`);
     const result = await response.json();
