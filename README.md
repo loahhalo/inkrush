@@ -2,6 +2,8 @@
 
 **Live app:** https://inkrush.up.railway.app · **Private GitHub:** https://github.com/loahhalo/inkrush
 
+The production app is now a unified Next.js / React / TypeScript platform in `platform/`, with Tailwind CSS, merged chapter releases and an authenticated streaming image proxy. See [Platform architecture and roadmap](docs/PLATFORM.md). Install its isolated dependencies with `pnpm --dir platform install`, then run `pnpm dev`, `pnpm build`, or `pnpm typecheck` from the repository root. Earlier static-reader instructions below are retained for local compatibility.
+
 The reader, gateway and persistent Indonesian source backend now run on Railway. Choose **Komiku · Suwayomi · ID** for the verified One Piece, One Punch Man and Solo Leveling chapters. See [Railway deployment and operations](docs/RAILWAY.md).
 
 A comic reader with a TikTok-like flow: swipe left/right to turn pages; swipe up/down or scroll on the reading canvas to change chapters. Arrow keys do the same. F toggles immersive mode. Reading progress and your library stay in this browser.

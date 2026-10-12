@@ -13,3 +13,6 @@ outputs
 work
 archive
 .env*
+**/node_modules
+**/.next
+**/*.tsbuildinfo

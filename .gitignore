@@ -55,3 +55,6 @@ next-env.d.ts
 /outputs/
 /work/
 /.runtime/
+**/.next/
+**/node_modules/
+**/*.tsbuildinfo

@@ -1,0 +1,11 @@
+export type Language = 'en' | 'id';
+export type ProviderRef = {provider: string; provider_internal_id: string; language: Language};
+export type InternalManga = ProviderRef & {title:string; altTitles?:string[]; author?:string; description?:string; genre?:string[]; poster?:string; format?:string; originalLanguage?:string; status?:string; latestChapter?:number; releaseDate?:string};
+export type InternalRelease = ProviderRef & {chapterNumber:number|null; name:string; releaseDate?:string; team?:string; priority?:number; resolution?:number; pageCount?:number};
+export type Comic = {id:string; title:string; author:string; description:string; genre:string[]; cover:string; language:Language; format:string; status:string; latestChapter?:number; releaseDate?:string};
+export type Release = {id:string; team:string; releaseDate?:string; pageCount?:number};
+export type Chapter = {id:string; chapterNumber:number|null; name:string; releaseDate?:string; releases:Release[]};
+export type ComicDetail = Comic & {chapters:Chapter[]; gaps:number[]; incomplete:boolean};
+export type Page = {src:string; width?:number; height?:number};
+export type Catalog = {comics:Comic[]; hasNextPage:boolean; partial:boolean};
+export type BrowseOptions = {q:string; language:Language; category:string; page:number; type?:string; genre?:string};

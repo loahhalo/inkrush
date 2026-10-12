@@ -12,12 +12,12 @@ Railway project: https://railway.com/project/2313c64c-d861-4b13-86dd-27ddd0458e5
 
 | Service | Build context | Start | Resources |
 |---|---|---|---|
-| reader | Repository root, `Dockerfile` | Node 24, `scripts/serve-hosted.mjs`, port 8080 | 1 replica, maximum 0.25 GB / 0.5 vCPU |
+| reader | Repository root, multi-stage `Dockerfile`, builds `platform/` | Next.js standalone on Node 24, port 8080 | 1 replica, maximum 0.25 GB / 0.5 vCPU |
 | suwayomi | `backend/railway`, `Dockerfile` | Official pinned Suwayomi container, port 4567 | 1 replica, maximum 1 GB / 1 vCPU; Java heap 512 MB |
 
-The reader serves static files and the normalized gateway. Its `/healthz` check has a 120-second deployment timeout. Images stream through restricted provider routes. Weeb Central is disabled in hosted builds; MangaDex EN/ID, WEBTOON, and installed Indonesian extensions are available.
+The reader runs the Next.js platform, unified library API and streaming image proxy. Its implementation, provider acceptance and roadmap are documented in [PLATFORM.md](PLATFORM.md). Its `/healthz` check has a 120-second deployment timeout. Images stream through restricted provider routes. Provider routing is server-only; the interface exposes language editions and translation groups.
 
-Suwayomi has a persistent `suwayomi-volume` mounted at `/home/suwayomi/.local/share/Tachidesk`. Installed extensions are Komiku, Kiryuu and Shinigami. Basic authentication is mandatory. The pinned official image index digest is `sha256:1fac27c387dc2ea9949e1a01ad7f6d6de9d72d3988338a95476748e5c45c4582`. Embedded Chromium and automatic global updates are disabled. The startup guard refuses to run without credentials or the expected volume mount.
+Suwayomi has a persistent `suwayomi-volume` mounted at `/home/suwayomi/.local/share/Tachidesk`. Installed extensions are Komiku, Kiryuu, Shinigami, Asura Scans, Flame Comics and Hive Scans. Basic authentication is mandatory. The pinned official image index digest is `sha256:1fac27c387dc2ea9949e1a01ad7f6d6de9d72d3988338a95476748e5c45c4582`. Embedded Chromium and automatic global updates are disabled. The startup guard refuses to run without credentials or the expected volume mount.
 
 Both services are connected to the private GitHub repository's `main` branch for automatic deployment. Builds use Dockerfile autodetection and saved Railway service settings. Deprecated `railway.json` files are not required. The reader's root directory is `/` and Suwayomi's Git build root is `/backend/railway`. Both use `Dockerfile` within their build context. Backend deployments watch `/backend/railway/**` so frontend edits do not unnecessarily restart its database.
 
