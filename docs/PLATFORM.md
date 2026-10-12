@@ -93,3 +93,9 @@ Browser checks should cover cold reload without a demo flash, search and languag
 4. Add more maintained scene extensions after per-provider acceptance tests.
 5. Collect actual image dimensions/resolution and read velocity before ranking with those signals. Add a scheduled worker for large catalog enrichment rather than fetching every source during every request.
 6. Add account-based synchronization if users need library/progress shared across devices. Current progress remains local to each browser origin.
+
+## Zoom and fullscreen
+
+The reader toolbar provides 100–300% zoom, 25% steps and a one-tap fit/reset. Page mode also supports pinch zoom, touch double-tap or mouse double-click, and bounded drag-to-pan. At 100%, swipes retain their original page/chapter gestures; at larger scales dragging moves the image. Wheel scrolling still changes chapters. Strip zoom widens the continuous images with native horizontal panning. Zoom does not alter saved chapter/page progress.
+
+Fullscreen uses the persistent document element and hides the app navigation. The same focus layout works when the native Fullscreen API is unavailable. Fullscreen chapter navigation uses the History API to update the current chapter without a fragment navigation that can dismiss native fullscreen. The visible exit button and F/Escape shortcuts restore the normal layout; leaving the reader also exits. Keyboard +/−/0 changes or resets zoom. Browser/system modifier shortcuts remain available.
