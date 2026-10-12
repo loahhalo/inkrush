@@ -1,6 +1,8 @@
 # INKRUSH on Railway
 
-Live reader: https://reader-production-ff95.up.railway.app/reader#discover
+Shareable reader address: https://inkrush.up.railway.app
+
+The root address opens the reader. Discover, title links, chapters, the API gateway and proxied comic images use this same public domain. Suwayomi remains a separate authenticated backend service; readers do not need its management address. The free Railway domain was renamed from `reader-production-ff95.up.railway.app` on 12 October 2026. Browser progress is stored per origin and does not move automatically from the previous address.
 
 Private source repository: https://github.com/loahhalo/inkrush
 
