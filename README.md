@@ -55,3 +55,5 @@ The chapter soundtrack is archived in archive/soundtrack for later development a
 ## Previous Vercel source availability
 
 Weeb Central returned HTTP 403 from the Vercel runtime, although its local reader flow works. The Vercel package disables that source and keeps WEBTOON and MangaDex active. Its Solo Leveling publisher entry opens Tappytoon externally. The new Railway reader also provides Komiku's Bahasa Indonesia edition inside the app; its chapter 1 images were verified along with One Piece and One Punch Man. These are distinct source editions with distinct IDs and progress.
+
+Android installation: open https://inkrush.up.railway.app in Chrome and tap **Install app**, or use the browser menu → **Add to Home screen** → **Install**. Reading uses the original swipe-left/page and scroll/chapter controls by default. See [platform architecture](docs/PLATFORM.md) for fallback coverage and PWA behavior.

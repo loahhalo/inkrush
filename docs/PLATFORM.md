@@ -11,12 +11,16 @@ platform/
     page.tsx, loading.tsx       consistent server/client loading layouts
     api/library/route.ts       normalized catalog, details and chapter pages
     api/proxy/image/route.ts    authenticated opaque image tickets, streaming
+    manifest.ts                Android/desktop install manifest
     healthz/route.ts
   components/
     reader-app.tsx             navigation, library, theme and progress
     catalog.tsx                single catalog, search and clean cover cards
     detail.tsx                 chapter directory
-    reader.tsx                 page/strip modes and translation releases
+    reader.tsx                 original swipe/page and scroll/chapter controls
+    paged-image.tsx             readable overlapping sections for tall pages
+    reader-gestures.ts          device-independent gesture rules
+    install-app.tsx             native install prompt and browser guidance
     shared.tsx                 skeletons, buffering, retries
     migration.ts               previous per-origin saved titles
   server/
@@ -33,13 +37,13 @@ The browser uses only `/api/library` and `/api/proxy/image`. Provider names, `pr
 
 1. Load the primary edition in its selected language.
 2. Find missing integer chapters from 1 through the highest known integer. Retain chapter 0, decimal chapters and unnumbered extras. Bound the reported gaps to 300.
-3. If gaps exist or the baseline has no chapters, search up to four other registered providers using the title. Require exact normalized title/alias matches and the same language. Sequels and uncertain matches are excluded.
+3. Always compare up to five other registered providers, even when the baseline is contiguous: a feed can be missing its entire newest section. Reuse cached catalog matches, try punctuation-normalized search and a Latin alias when necessary, and require exact normalized title/alias matches in the same language. Recheck fetched metadata. Sequels and uncertain matches are excluded. Official WEBTOON episode feeds retain their own numbering.
 4. Merge releases by chapter number; keep each unnumbered extra distinct. Rank releases by configured provider priority, then measured image resolution when available, then release date. Unknown resolution is not invented. Full-resolution MangaDex pages are requested.
 5. Return one chronological chapter list with opaque alternative release IDs. The reader can select a translation release. If the selected release's page-list request fails, try other registered releases for that chapter.
 
-Chapter feeds are cached for 20 minutes; catalogs for 15 minutes; page lists for 3 minutes. The cache coalesces concurrent requests and uses a bounded 100-entry LRU in one Node process. Upstash REST Redis can be supplied with `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for shared caching. Redis is optional and has not been purchased. Image bytes are streamed rather than stored in this cache. Provider failures cannot fabricate missing chapters. No anti-bot challenge bypass is implemented.
+Merged feeds are cached for 20 minutes, with a 1-minute retry when gaps or provider failures remain. Exact upstream editions and successful search matches are cached for 15 minutes; empty searches for 1 minute; catalogs for 15 minutes; page lists for 3 minutes. Adding releases preserves old chapter deep links by matching their release membership. The cache coalesces concurrent requests and uses a bounded 100-entry LRU in one Node process. Upstash REST Redis can be supplied with `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for shared caching. Redis is optional and has not been purchased. Image bytes are streamed rather than stored in this cache. Provider failures cannot fabricate missing chapters. No anti-bot challenge bypass is implemented.
 
-Asura, Flame and Hive are installed through maintained Keiyoushi extensions in the existing backend. The source registry automatically exposes supported EN/ID editions internally. Reaper is not currently available in the installed extension catalog. Bato's current public site reports closure; encrypted-state unpacking for that closed service is not implemented. Keep unavailable providers disabled; add a maintained adapter/extension only after testing its search, feed and images.
+Asura, Flame, Hive, Weeb Central and MangaKatana are installed through maintained Keiyoushi extensions in the existing backend. The two broad English catalogs supply older/popular manga chapters alongside the scene releases. The source registry automatically exposes supported EN/ID editions internally. Reaper is not currently available in the installed extension catalog. Bato's current public site reports closure; encrypted-state unpacking for that closed service is not implemented. Keep unavailable providers disabled; add a maintained adapter/extension only after testing its search, feed and images.
 
 ## Proxy contract
 
@@ -56,6 +60,16 @@ Set `PLATFORM_SIGNING_KEY` to a stable random secret for opaque identifiers. The
 The exact blocking theme script is in `platform/app/layout.tsx`. It runs in `<head>` before the body, sets `data-theme`, `color-scheme`, background and foreground CSS variables, and chooses an initial route-shaped skeleton. CSS is bundled with Next; system fonts avoid late font downloads. Server and first client render use the same deterministic shell. `Suspense` and `loading.tsx` provide matching skeleton cards. There is no demo-story render or mount-time full-layout replacement.
 
 Cards and skeletons share a 3:4 cover ratio and grid rules. Cover cards are whole-card anchors, with titles below covers and metadata only when known. The strip reader reserves page space using known dimensions or a 1:2 fallback, displays a spinner, fades in decoded images, and offers inline retry. When a page above the viewport changes its reserved height, its height delta is compensated. Exact heights cannot be guaranteed before a source supplies dimensions; the default ratio is an estimate.
+
+## Reader controls and Android installation
+
+Page mode remains the default for every comic. Swipe left/right (or drag with a mouse) to move through pages; scroll/swipe up/down to change chapter. Long images use the existing `stripMetrics` algorithm to show readable overlapping sections, with left/right advancing sections before changing image. Pinch zoom is allowed; browser panning does not consume chapter gestures. Wheel input is normalized and guarded against inertial multiple chapter changes. Strip mode is an explicit choice for vertical-format stories; native scrolling reads the strip in that mode.
+
+`app/manifest.ts` exposes `/manifest.webmanifest` with a stable root identity, standalone display, 192/512 PNG icons and a maskable icon. `InstallApp` captures Chromium’s `beforeinstallprompt` and opens the native dialog only on a user click. If unavailable (including in-app browsers), the same button opens Android/iOS browser installation instructions. Installation controls disappear in standalone mode.
+
+`platform/public/sw.js` provides a same-origin, bounded static asset cache and offline navigation fallback. API responses and proxied comic images are excluded. Navigation is network-first to prevent serving obsolete app HTML after deployments. The app needs connectivity to fetch new chapters; this does not promise downloaded/offline comics. Docker copies the platform public assets into the standalone runtime. Regenerate brand icons with `node scripts/generate-app-icons.mjs` after installing platform dependencies.
+
+On Android, visit the live HTTPS address in Chrome, tap **Install app**, or use the browser menu → **Add to Home screen** → **Install**. Device installation itself must be checked on the Android phone; the desktop browser verifies the manifest, assets, worker registration and installation guidance.
 
 ## Deployment and verification
 

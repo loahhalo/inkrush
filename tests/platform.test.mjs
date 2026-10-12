@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 process.env.PLATFORM_SIGNING_KEY='test-key-never-used-in-production-32-bytes';
 const {seal,unseal}=await import('../platform/server/identity.ts');
-const {detectGaps,mergeReleases,sameTitle,MangaAggregatorService}=await import('../platform/server/aggregator.ts');
+const {detectGaps,mergeReleases,sameTitle,MangaAggregatorService,findChapter}=await import('../platform/server/aggregator.ts');
 const {proxyTicket,isPublicAddress}=await import('../platform/server/image-proxy.ts');
 const ref=(id,number,team='Team A',extra={})=>({provider:'test',provider_internal_id:id,language:'en',chapterNumber:number,name:'Chapter '+number,team,...extra});
 
@@ -46,4 +46,52 @@ test('image proxy refuses arbitrary URLs and private network destinations',async
   for(const url of ['http://127.0.0.1/','https://169.254.169.254/','https://evil.test/image.jpg'])assert.equal((await proxyTicket(new Request('https://reader.test/api/proxy/image?url='+encodeURIComponent(url)+'&referer=https://evil.test'))).status,400);
   for(const ip of ['127.0.0.1','10.0.0.1','172.16.0.1','192.168.1.1','169.254.169.254','100.64.0.1','::1','::ffff:127.0.0.1','fc00::1'])assert.equal(isPublicAddress(ip),false,ip);
   assert.equal(isPublicAddress('8.8.8.8'),true);
+});
+
+test('contiguous baseline feeds still discover later chapters and cache upstream editions',async()=>{
+  const metadata={provider:'truncated',provider_internal_id:'truncated-test',title:'Truncated Exact',language:'en',genre:[]};
+  let loads=0;
+  const primary={id:'truncated',languages:['en'],manga:async()=>({...metadata,chapters:[1,2].map(n=>({...ref('early-'+n,n),provider:'truncated'}))})};
+  const secondary={id:'full',languages:['en'],browse:async()=>({mangas:[{...metadata,provider:'full'}],hasNextPage:false}),manga:async()=>{loads++;return {...metadata,provider:'full',chapters:[1,2,3,4].map(n=>({...ref('full-'+n,n),provider:'full'}))};}};
+  const service=new MangaAggregatorService(async()=>[primary,secondary]);
+  const id=seal('m',metadata);const detail=await service.detail(id);
+  assert.deepEqual(detail.chapters.map(c=>c.chapterNumber),[1,2,3,4]);assert.equal(detail.latestChapter,4);
+  await service.detail(id);assert.equal(loads,1);
+});
+
+test('alias lookup fills gaps while rejecting changed metadata and other-language providers',async()=>{
+  const metadata={provider:'alias-primary',provider_internal_id:'alias-test',title:'English Main Name',altTitles:['Romanized Alias'],language:'en',genre:[]};
+  const primary={id:'alias-primary',languages:['en'],manga:async()=>({...metadata,chapters:[{...ref('alias1',1),provider:'alias-primary'}]})};
+  const alias={id:'alias-secondary',languages:['en'],browse:async o=>({mangas:o.q==='Romanized Alias'?[{...metadata,title:'Romanized Alias',provider:'alias-secondary'}]:[],hasNextPage:false}),manga:async()=>({...metadata,title:'Romanized Alias',chapters:[{...ref('alias2',2),provider:'alias-secondary'}]})};
+  const wrong={id:'wrong-secondary',languages:['en'],browse:async()=>({mangas:[metadata],hasNextPage:false}),manga:async()=>({...metadata,title:'Unrelated Sequel',altTitles:[],chapters:[{...ref('wrong3',3),provider:'wrong-secondary'}]})};
+  const foreign={id:'foreign',languages:['id'],browse:async()=>{throw new Error('Must never query another reading language');}};
+  const detail=await new MangaAggregatorService(async()=>[primary,alias,wrong,foreign]).detail(seal('m',metadata));
+  assert.deepEqual(detail.chapters.map(c=>c.chapterNumber),[1,2]);
+});
+
+test('old chapter links resolve after another release is merged',()=>{
+  const original=mergeReleases([ref('old-release',42)])[0];
+  const merged=mergeReleases([ref('new-release',42,'New',{priority:70}),ref('old-release',42)]);
+  assert.notEqual(original.id,merged[0].id);assert.equal(findChapter(merged,original.id)?.chapterNumber,42);
+  assert.equal(findChapter(merged,'invalid'),undefined);
+  assert.equal(mergeReleases([ref('unknown',1,'Unknown')])[0].releases[0].team,'Translation team');
+});
+
+test('official webtoon episode feeds do not mix scene chapter numbering',async()=>{
+  const metadata={provider:'webtoon',provider_internal_id:'official-test',title:'Official Original Test',language:'en'};
+  const official={id:'webtoon',languages:['en'],manga:async()=>({...metadata,chapters:[{...ref('episode1',1),provider:'webtoon'}]})};
+  const other={id:'not-official',languages:['en'],browse:async()=>{throw new Error('Do not cross-match official episode feeds');}};
+  const detail=await new MangaAggregatorService(async()=>[official,other]).detail(seal('m',metadata));
+  assert.equal(detail.chapters.length,1);assert.equal(detail.incomplete,false);
+});
+
+test('detail reuses a catalog search match instead of losing it to an empty repeat search',async()=>{
+  const metadata={provider:'repeat-primary',provider_internal_id:'repeat-search-test',title:'Repeat-Search Title',language:'en',genre:[]};
+  const primary={id:'repeat-primary',languages:['en'],browse:async()=>({mangas:[metadata],hasNextPage:false}),manga:async()=>({...metadata,chapters:[{...ref('repeat1',1),provider:'repeat-primary'}]})};
+  let searches=0;
+  const other={id:'repeat-secondary',languages:['en'],browse:async o=>({mangas:++searches===1?[{...metadata,provider:'repeat-secondary'}]:[],hasNextPage:false}),manga:async()=>({...metadata,chapters:[{...ref('repeat2',2),provider:'repeat-secondary'}]})};
+  const service=new MangaAggregatorService(async()=>[primary,other]);
+  const catalog=await service.catalog({q:'Repeat Search Title',language:'en',category:'popular',page:1});
+  const detail=await service.detail(catalog.comics[0].id);
+  assert.deepEqual(detail.chapters.map(c=>c.chapterNumber),[1,2]);
 });
