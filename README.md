@@ -27,7 +27,7 @@ Optional other Keiyoushi sources run through Suwayomi. Start `docker compose -f 
 
 ## Build and verify
 
-For production, Vercel builds from the repository root using `vercel.json`. It serves the maintained `public/` reader and `api/` gateway; `scripts/configure-hosted.mjs` disables the source that rejects hosted requests. The persistent Suwayomi service runs separately on Railway using [backend/railway](backend/railway/README.md). Backend credentials belong only in Railway/Vercel variables, never in GitHub or browser settings.
+Railway builds the reader and gateway from the root `Dockerfile`, and the persistent Suwayomi service from [backend/railway](backend/railway/README.md). Both deploy from GitHub `main`. An optional Vercel deployment uses `vercel.json` and the `api/` wrappers. `scripts/configure-hosted.mjs` disables the source that rejects hosted requests. Backend credentials belong only in service variables, never in GitHub or browser settings.
 
 ```
 pnpm test
@@ -50,6 +50,6 @@ The chapter dialog has a fixed header and bounded scrolling, exact chapter-numbe
 
 The chapter soundtrack is archived in archive/soundtrack for later development and is absent from public builds.
 
-## Hosted source availability
+## Previous Vercel source availability
 
-Weeb Central returned HTTP 403 from the Vercel runtime, although its local reader flow works. The Vercel package disables that source and keeps WEBTOON and MangaDex active. Solo Leveling searches include a clearly labelled official English publisher entry that opens Tappytoon. This is an external-reader fallback; full Solo Leveling pages are not available inside the hosted app. The local source adapter was verified with 201 chapter entries and chapter 1 images, including readable sections and saved section position.
+Weeb Central returned HTTP 403 from the Vercel runtime, although its local reader flow works. The Vercel package disables that source and keeps WEBTOON and MangaDex active. Its Solo Leveling publisher entry opens Tappytoon externally. The new Railway reader also provides Komiku's Bahasa Indonesia edition inside the app; its chapter 1 images were verified along with One Piece and One Punch Man. These are distinct source editions with distinct IDs and progress.

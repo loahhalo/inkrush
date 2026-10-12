@@ -1,5 +1,7 @@
 # INKRUSH reader architecture and implementation roadmap
 
+Deployment update: the reader, gateway and persistent Suwayomi backend now run on Railway and deploy from GitHub `main`. See [RAILWAY.md](RAILWAY.md) for the current services, verification and operations. The original Vercel architecture below remains an optional deployment path; Redis and scheduled ranking refresh have not been provisioned.
+
 ## Implemented in this revision
 
 The maintained application is a vanilla JavaScript mobile/desktop reader with Node.js 24 Vercel Functions. Keep this stack for this release; migrating its working UI to Next.js adds no immediate value. The existing Next/Sites scaffold is separate from the deployed `public/` reader. No soundtrack code is shipped.

@@ -1,5 +1,7 @@
 # Manga source evaluation
 
+Hosting update: Komiku is now verified through the public Railway gateway for One Piece, One Punch Man and Solo Leveling chapter 1 images. See [RAILWAY.md](RAILWAY.md). The public scraper checks below describe the earlier evaluation, before this hosted Suwayomi deployment.
+
 Checked 12 October 2026 for INKRUSH. Repository documentation and live service health are different checks. No additional provider was enabled in production during this evaluation.
 
 ## Current integration

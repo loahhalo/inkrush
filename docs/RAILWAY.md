@@ -17,7 +17,7 @@ The reader serves static files and the normalized gateway. Its `/healthz` check 
 
 Suwayomi has a persistent `suwayomi-volume` mounted at `/home/suwayomi/.local/share/Tachidesk`. Installed extensions are Komiku, Kiryuu and Shinigami. Basic authentication is mandatory. The pinned official image index digest is `sha256:1fac27c387dc2ea9949e1a01ad7f6d6de9d72d3988338a95476748e5c45c4582`. Embedded Chromium and automatic global updates are disabled. The startup guard refuses to run without credentials or the expected volume mount.
 
-Builds use Dockerfile autodetection and saved Railway service settings. Deprecated `railway.json` files are not required. Keep the reader's root directory at `/` and Suwayomi's Git build root at `/backend/railway` when configuring GitHub deployments. Both use `Dockerfile` within their build context.
+Both services are connected to the private GitHub repository's `main` branch for automatic deployment. Builds use Dockerfile autodetection and saved Railway service settings. Deprecated `railway.json` files are not required. The reader's root directory is `/` and Suwayomi's Git build root is `/backend/railway`. Both use `Dockerfile` within their build context. Backend deployments watch `/backend/railway/**` so frontend edits do not unnecessarily restart its database.
 
 ## Credentials and management
 
@@ -41,8 +41,8 @@ Counts include source-specific entries and do not guarantee completeness. The fi
 
 The public app does not require this PC to stay on. Browser progress and saved titles remain local to each browser origin. The local reader, old Vercel site, and Railway site have separate storage; progress transfer is not automatic.
 
-Commit source changes to GitHub. For manual deployment with an authenticated Railway CLI, use `railway up --service reader` from the repository root. For Suwayomi, use the configured Git build root or deploy from `backend/railway` with `--path-as-root` and explicit project/service selectors. After updating, verify `/healthz`, Discover, chapter grids, and an actual decoded image. Back up the Suwayomi volume before changing the image or database version. Do not replace it with ephemeral storage.
+Commit source changes to GitHub. For manual deployment with an authenticated Railway CLI, use `railway up --service reader` or `railway up --service suwayomi` from the repository root with the correct project selected. The saved Suwayomi root directory selects its backend files. After updating, verify `/healthz`, Discover, chapter grids, and an actual decoded image. Back up the Suwayomi volume before changing the image or database version. Do not replace it with ephemeral storage.
 
 Trending currently uses the bundled MangaDex snapshots and in-memory cache. Shared Redis and scheduled ranking refresh remain optional future configuration. No additional database service was purchased.
 
-Railway is usage-billed. This setup initially runs using the account's existing trial credit. Select a paid plan in Railway before trial expiry or credit exhaustion if the app should stay available. CPU/RAM caps bound individual services; they are not a monthly spending cap.
+Railway is usage-billed. The user chose to keep the account's existing trial credit for now; no subscription was purchased. Select a paid plan in Railway before trial expiry or credit exhaustion if the app should stay available. Hobby was offered at $5 upfront with $5 of included monthly usage and additional charges above that. CPU/RAM caps bound individual services; they are not a monthly spending cap.
