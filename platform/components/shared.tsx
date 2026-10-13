@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import CoverImage from './cover-image.tsx';
 import ComicTags from './comic-tags.tsx';
 import type {Comic,Page} from '../server/types.ts';
-export async function api<T>(action:string,params:Record<string,string|number>={},signal?:AbortSignal):Promise<T>{const url=new URL('/api/library',location.origin);url.searchParams.set('action',action);for(const [k,v]of Object.entries(params))url.searchParams.set(k,String(v));const response=await fetch(url,{signal:signal?AbortSignal.any([signal,AbortSignal.timeout(55000)]):AbortSignal.timeout(55000)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Something went wrong. Please retry.');return data;}
+export {api} from './client-api.ts';
 export function asComic(c:Comic):Comic{return {themes:c.themes,contentTags:c.contentTags,contentRating:c.contentRating,demographic:c.demographic,createdAt:c.createdAt,id:c.id,title:c.title,author:c.author,description:c.description,genre:c.genre,cover:c.cover,language:c.language,format:c.format,status:c.status,latestChapter:c.latestChapter,releaseDate:c.releaseDate};}
 export function readStore<T>(key:string,fallback:T):T{try{return JSON.parse(localStorage.getItem('inkrush:v2:'+key)||'null')??fallback;}catch{return fallback;}}
 export function writeStore(key:string,value:unknown){try{localStorage.setItem('inkrush:v2:'+key,JSON.stringify(value));}catch{}}

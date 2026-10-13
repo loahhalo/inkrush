@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
+import {catalogSnapshots} from './catalog-snapshots.ts';
 import {DISCOVERY_REFRESH_MS} from '../shared/discovery.ts';
 import {rankSuggestions} from '../../public/search.js';
 import {matchesPreferences,comicType,type ContentPreferences} from '../shared/content.ts';
@@ -8,12 +9,12 @@ import {api,ComicCard,ErrorMessage,GridSkeleton,Icon,readStore} from './shared.t
 const categories=[['trending','Trending'],['latest','Latest updates'],['new','New'],['popular','Popular']];
 export default function Catalog({language,setLanguage,preferences}:{language:Language;setLanguage:(lang:Language)=>void;preferences:ContentPreferences}){
   const [query,setQuery]=useState(''),[search,setSearch]=useState(''),[category,setCategory]=useState('trending'),[type,setType]=useState(''),[page,setPage]=useState(1),[data,setData]=useState<CatalogData|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0),[history,setHistory]=useState<Comic[]>([]),[focused,setFocused]=useState(false),[active,setActive]=useState(-1),[visible,setVisible]=useState(30);
-  const results=useRef<HTMLDivElement>(null),version=useRef(0),preferenceKey=JSON.stringify(preferences);
+  const dataRef=useRef<CatalogData|null>(null),results=useRef<HTMLDivElement>(null),version=useRef(0),preferenceKey=JSON.stringify(preferences);
   useEffect(()=>{setHistory(readStore<Comic[]>('history',[]));},[]);
   useEffect(()=>{const timer=setTimeout(()=>{setSearch(query.trim());setPage(1);},320);return ()=>clearTimeout(timer);},[query]);
   useEffect(()=>{
-    const controller=new AbortController(),requestVersion=++version.current;setLoading(true);setError('');setVisible(30);
-    api<CatalogData>('catalog',{q:search,language,category,page,preferences:preferenceKey,...(type?{type}:{})},controller.signal).then(next=>{if(controller.signal.aborted||requestVersion!==version.current)return;setData(old=>page>1&&old?{...next,comics:[...new Map([...old.comics,...next.comics].map(c=>[c.id,c])).values()]}:next);}).catch(e=>{if(!controller.signal.aborted)setError(e.message);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});
+    const controller=new AbortController(),requestVersion=++version.current,snapshotKey=JSON.stringify([search,language,category,type,preferenceKey,page]),snapshot=catalogSnapshots.get(snapshotKey);setLoading(!snapshot);if(snapshot){dataRef.current=snapshot;setData(snapshot);}setError('');if(page===1)setVisible(30);
+    api<CatalogData>('catalog',{q:search,language,category,page,preferences:preferenceKey,...(type?{type}:{})},controller.signal).then(next=>{if(controller.signal.aborted||requestVersion!==version.current)return;const old=dataRef.current,combined=page>1&&old?{...next,comics:[...new Map([...old.comics,...next.comics].map(c=>[c.id,c])).values()]}:next;dataRef.current=combined;setData(combined);catalogSnapshots.set(snapshotKey,combined,!search&&page===1);if(page>1)setVisible(n=>n+30);}).catch(e=>{if(!controller.signal.aborted&&!snapshot)setError(e.message);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});
     return ()=>controller.abort();
   },[search,language,category,type,preferenceKey,page,revision]);
   useEffect(()=>{
@@ -21,8 +22,8 @@ export default function Catalog({language,setLanguage,preferences}:{language:Lan
     async function refresh(){
       if(controller.signal.aborted||busy||document.visibilityState==='hidden'||navigator.onLine===false||Date.now()-lastAttempt<DISCOVERY_REFRESH_MS)return;
       busy=true;lastAttempt=Date.now();
-      try{const next=await api<CatalogData>('catalog',{q:search,language,category,page:1,preferences:preferenceKey,...(type?{type}:{})},controller.signal);if(controller.signal.aborted||requestVersion!==version.current)return;
-        setData(old=>page>1&&old?{...next,comics:[...next.comics,...old.comics.filter(c=>!next.comics.some(n=>n.id===c.id))],hasNextPage:old.hasNextPage}:next);
+      try{const next=await api<CatalogData>('catalog',{q:search,language,category,page:1,fresh:1,preferences:preferenceKey,...(type?{type}:{})},controller.signal);if(controller.signal.aborted||requestVersion!==version.current)return;
+        const old=dataRef.current,combined=page>1&&old?{...next,comics:[...next.comics,...old.comics.filter(c=>!next.comics.some(n=>n.id===c.id))],hasNextPage:old.hasNextPage}:next;dataRef.current=combined;setData(combined);catalogSnapshots.set(JSON.stringify([search,language,category,type,preferenceKey,page]),combined,!search&&page===1);
       }catch{/* A background failure keeps the existing cards in place. */}
       finally{busy=false;}
     }

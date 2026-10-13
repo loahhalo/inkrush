@@ -1,11 +1,12 @@
 'use client';
+import {readComicDetail} from './comic-cache.ts';
 import CoverImage from './cover-image.tsx';
 import ComicTags from './comic-tags.tsx';
 import {useEffect,useMemo,useState} from 'react';
 import type {Comic,ComicDetail,Chapter,Language} from '../server/types.ts';
-import {api,asComic,DetailSkeleton,ErrorMessage,Icon,readStore,writeStore} from './shared.tsx';
+import {asComic,DetailSkeleton,ErrorMessage,Icon,readStore,writeStore} from './shared.tsx';
 export default function Detail({id,language,onRead,saved,toggleSaved}:{id:string;language:Language;onRead:(comic:ComicDetail,index:number)=>void;saved:Comic[];toggleSaved:(comic:Comic)=>void}){const [comic,setComic]=useState<ComicDetail|null>(null),[error,setError]=useState(''),[revision,setRevision]=useState(0),[query,setQuery]=useState(''),[order,setOrder]=useState('desc');
-  useEffect(()=>{const controller=new AbortController();setComic(null);setError('');api<ComicDetail>('detail',{id,language},controller.signal).then(c=>{if(controller.signal.aborted)return;setComic(c);if(id!==c.id)window.history.replaceState(null,'','#title/'+encodeURIComponent(c.id));const history=readStore<Comic[]>('history',[]);const prior=history.find(h=>h.id===c.id) as (Comic & {visits?:number})|undefined;writeStore('history',[{...asComic(c),visits:(prior?.visits||0)+1,at:Date.now()},...history.filter(h=>h.id!==c.id)].slice(0,30));}).catch(e=>{if(!controller.signal.aborted)setError(e.message);});return ()=>controller.abort();},[id,language,revision]);
+  useEffect(()=>{const controller=new AbortController();setComic(null);setError('');readComicDetail(id,language,revision>0).then(c=>{if(controller.signal.aborted)return;setComic(c);if(id!==c.id)window.history.replaceState(null,'','#title/'+encodeURIComponent(c.id));const history=readStore<Comic[]>('history',[]);const prior=history.find(h=>h.id===c.id) as (Comic & {visits?:number})|undefined;writeStore('history',[{...asComic(c),visits:(prior?.visits||0)+1,at:Date.now()},...history.filter(h=>h.id!==c.id)].slice(0,30));}).catch(e=>{if(!controller.signal.aborted)setError(e.message);});return ()=>controller.abort();},[id,language,revision]);
   const rows=useMemo(()=>{const chapters=(comic?.chapters||[]).map((chapter,index)=>({chapter,index})).filter(({chapter})=>!query||String(chapter.chapterNumber??'extra').includes(query)||chapter.name.toLowerCase().includes(query.toLowerCase()));return chapters.sort((a,b)=>order==='date'?String(b.chapter.releaseDate||'').localeCompare(String(a.chapter.releaseDate||'')):(order==='asc'?1:-1)*((a.chapter.chapterNumber??Infinity)-(b.chapter.chapterNumber??Infinity)));},[comic,query,order]);
   if(error)return <ErrorMessage message={error} retry={()=>setRevision(n=>n+1)}/>;if(!comic)return <DetailSkeleton/>;
   const isSaved=saved.some(c=>c.id===comic.id);

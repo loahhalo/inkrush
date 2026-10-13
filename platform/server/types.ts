@@ -10,4 +10,4 @@ export type Chapter = {id:string; chapterNumber:number|null; name:string; releas
 export type ComicDetail = Comic & {chapters:Chapter[]; gaps:number[]; incomplete:boolean};
 export type Page = {src:string; width?:number; height?:number};
 export type Catalog = {comics:Comic[]; hasNextPage:boolean; partial:boolean;updatedAt?:string;refreshing?:boolean;stale?:boolean;refreshAfter?:number};
-export type BrowseOptions = {q:string; language:Language; category:string; page:number; type?:string; genre?:string;preferences?:ContentPreferences;metadataOnly?:boolean};
+export type BrowseOptions = {q:string; language:Language; category:string; page:number; type?:string; genre?:string;preferences?:ContentPreferences;metadataOnly?:boolean;fresh?:boolean};
