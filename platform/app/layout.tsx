@@ -1,5 +1,6 @@
 import type {Metadata,Viewport} from 'next';
 import './globals.css';
+import './content.css';
 export const metadata:Metadata={title:'INKRUSH — One more page.',description:'Discover manga, manhwa and manhua. Read English and Indonesian chapters in one place.',manifest:'/manifest.webmanifest',applicationName:'INKRUSH',appleWebApp:{capable:true,statusBarStyle:'black-translucent',title:'INKRUSH'},icons:{icon:'/icons/icon-192.png',apple:'/icons/apple-touch-icon.png'}};
 export const viewport:Viewport={width:'device-width',initialScale:1,themeColor:'#101114'};
 // Runs synchronously before the body. The server and first client render share the same shell.
