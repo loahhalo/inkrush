@@ -1,6 +1,8 @@
 # INKRUSH on Railway
 
-Shareable reader address: https://inkrush.up.railway.app
+Shareable reader address: https://inkrush.site
+
+The existing https://inkrush.up.railway.app address remains available.
 
 The root address opens the reader. Discover, title links, chapters, the API gateway and proxied comic images use this same public domain. Suwayomi remains a separate authenticated backend service; readers do not need its management address. The free Railway domain was renamed from `reader-production-ff95.up.railway.app` on 12 October 2026. Browser progress is stored per origin and does not move automatically from the previous address.
 
@@ -48,3 +50,9 @@ Commit source changes to GitHub. For manual deployment with an authenticated Rai
 Trending currently uses the bundled MangaDex snapshots and in-memory cache. Shared Redis and scheduled ranking refresh remain optional future configuration. No additional database service was purchased.
 
 Railway is usage-billed. The user chose to keep the account's existing trial credit for now; no subscription was purchased. Select a paid plan in Railway before trial expiry or credit exhaustion if the app should stay available. Hobby was offered at $5 upfront with $5 of included monthly usage and additional charges above that. CPU/RAM caps bound individual services; they are not a monthly spending cap.
+
+## Custom domain
+
+`inkrush.site` is attached to the reader service on port 8080. Hostinger manages DNS using its existing nameservers. The root is an ALIAS (`@`) pointing to `vfca9grn.up.railway.app`, TTL 300 seconds; Railway manages the valid HTTPS certificate and HTTP-to-HTTPS redirect. Existing email and domain-verification records are retained.
+
+The current Railway plan permits only one custom hostname on this service. `www.inkrush.site` is not attached and should not be used as the share link; Hostinger forwarding was not accepted, and its previous CNAME to the root was restored. No plan upgrade or billing change was made.

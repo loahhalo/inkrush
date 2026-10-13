@@ -1,6 +1,6 @@
 # Unified INKRUSH platform
 
-The Railway reader now builds `platform/`: Next.js App Router, React, TypeScript and Tailwind CSS. The original `public/` reader is retained for compatibility tests and server-side adapters, but its prototype HTML/JavaScript is not served by the production Next app. The public address stays https://inkrush.up.railway.app . Suwayomi remains an authenticated persistent backend.
+The Railway reader now builds `platform/`: Next.js App Router, React, TypeScript and Tailwind CSS. The original `public/` reader is retained for compatibility tests and server-side adapters, but its prototype HTML/JavaScript is not served by the production Next app. The shareable public address is https://inkrush.site . The existing Railway address remains available. Suwayomi remains an authenticated persistent backend.
 
 ## Boundaries
 
