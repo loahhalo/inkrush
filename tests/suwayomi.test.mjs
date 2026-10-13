@@ -28,3 +28,11 @@ test('Suwayomi images use the same Basic header without putting credentials in U
     const response=await handleGatewayImage(new Request('https://reader.test/api/gateway-image?path=/api/v1/manga/1/thumbnail'));assert.equal(response.status,200);
   }finally{globalThis.fetch=original;for(const key of keys)if(before[key]===undefined)delete process.env[key];else process.env[key]=before[key];}
 });
+
+test('stale source thumbnails refresh the exact manga once and retry its original image',async()=>{
+  const keys=['SUWAYOMI_URL','SUWAYOMI_USERNAME','SUWAYOMI_PASSWORD','SUWAYOMI_TOKEN'],before=Object.fromEntries(keys.map(k=>[k,process.env[k]])),original=globalThis.fetch;let images=0,refreshes=0;
+  try{Object.assign(process.env,{SUWAYOMI_URL:'https://server.test',SUWAYOMI_USERNAME:'reader',SUWAYOMI_PASSWORD:'private'});delete process.env.SUWAYOMI_TOKEN;
+    globalThis.fetch=async(input,options)=>{const url=String(input);if(url.endsWith('/api/graphql')){refreshes++;assert.deepEqual(JSON.parse(options.body).variables.input,{id:887,fetchManga:true,fetchChapters:false});return Response.json({data:{fetchMangaAndChapters:{manga:{id:887}}}});}assert.equal(url,'https://server.test/api/v1/manga/887/thumbnail');images++;return images%2?new Response(null,{status:404}):new Response('original-cover',{headers:{'Content-Type':'image/webp'}});};
+    for(let n=0;n<2;n++){const response=await handleGatewayImage(new Request('https://reader.test/api/gateway-image?path=/api/v1/manga/887/thumbnail'));assert.equal(response.status,200);assert.equal(await response.text(),'original-cover');}assert.equal(refreshes,1);assert.equal(images,4);
+  }finally{globalThis.fetch=original;for(const key of keys)if(before[key]===undefined)delete process.env[key];else process.env[key]=before[key];}
+});
