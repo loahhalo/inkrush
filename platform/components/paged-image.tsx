@@ -5,7 +5,7 @@ import {stripMetrics} from '../../public/strip.js';
 import {clampPan,pinchZoom,type Point} from './reader-display.ts';
 import type {Page} from '../server/types.ts';
 
-export default function PagedImage({page,alt,segment,onSegments,zoom,onZoom,onSwipe}:{page:Page;alt:string;segment:number;onSegments:(total:number)=>void;zoom:number;onZoom:(value:number)=>void;onSwipe:(dx:number,dy:number)=>void}){
+export default function PagedImage({page,alt,segment,onSegments,zoom,onZoom,onSwipe,onReady}:{onReady:()=>void;page:Page;alt:string;segment:number;onSegments:(total:number)=>void;zoom:number;onZoom:(value:number)=>void;onSwipe:(dx:number,dy:number)=>void}){
   const host=useRef<HTMLDivElement>(null),image=useRef<HTMLImageElement>(null),report=useRef(onSegments);
   const [state,setState]=useState<'loading'|'ready'|'error'>('loading'),[attempt,setAttempt]=useState(0),[metrics,setMetrics]=useState({total:1,step:0,maxOffset:0}),[pan,setPan]=useState<Point>({x:0,y:0});
   const currentPan=useRef(pan),pointers=useRef(new Map<number,Point>()),start=useRef<Point|null>(null),startPan=useRef<Point>({x:0,y:0}),pinch=useRef({distance:0,zoom:1,used:false}),pointerType=useRef('mouse'),tap=useRef<{time:number;point:Point}|null>(null);
@@ -48,7 +48,7 @@ export default function PagedImage({page,alt,segment,onSegments,zoom,onZoom,onSw
     {state==='loading'?<span className="page-spinner" role="status" aria-label="Loading page"/>:null}
     {state==='error'?<button className="image-retry" onClick={()=>{setState('loading');setAttempt(n=>n+1);}}>Tap to retry</button>:null}
     <div className="paged-image-content" style={{transform:`translate(${pan.x}px,${pan.y}px) scale(${zoom})`}}>
-      <img ref={image} key={attempt} src={page.src+(attempt?'&retry='+attempt:'')} alt={alt} draggable={false} decoding="async" onLoad={()=>setState('ready')} onError={()=>setState('error')} style={{opacity:state==='ready'?1:0,transform:metrics.total>1?`translateY(-${offset}px)`:undefined}}/>
+      <img ref={image} key={attempt} src={page.src+(attempt?'&retry='+attempt:'')} alt={alt} draggable={false} loading="eager" fetchPriority="high" decoding="async" onLoad={()=>{setState('ready');onReady();}} onError={()=>setState('error')} style={{opacity:state==='ready'?1:0,transform:metrics.total>1?`translateY(-${offset}px)`:undefined}}/>
     </div>
   </div>;
 }
