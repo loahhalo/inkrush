@@ -53,3 +53,9 @@ test('sources without a real new-title feed never relabel latest chapter updates
 test('format uses known source metadata instead of guessing every unclassified comic is Japanese manga',()=>{
   assert.equal(comicFormat(undefined,'ko'),'Manhwa');assert.equal(comicFormat(undefined,'ja'),'Manga');assert.equal(comicFormat(undefined,'zh-hk'),'Manhua');assert.equal(comicFormat(undefined,undefined,['Manhwa','Action']),'Manhwa');assert.equal(comicFormat(), 'Other');assert.equal(comicFormat('Webtoon'),'Webtoon');
 });
+
+test('default discovery interval is five minutes and a refresh request waits for fresh data without polling',async()=>{
+  let now=0,calls=0,release;const cache=new LiveFeedCache({now:()=>now});const load=async()=>{calls++;return ['first'];};
+  const first=await cache.read('feed',load,true);assert.equal(first.refreshAfter,300);now=299999;await cache.read('feed',load,true);assert.equal(calls,1);
+  now=300000;const refresh=cache.read('feed',()=>new Promise(resolve=>{calls++;release=resolve;}),true);await Promise.resolve();assert.equal(calls,2);release(['next']);const fresh=await refresh;assert.deepEqual(fresh.value,['next']);assert.equal(fresh.refreshing,false);assert.equal(fresh.updatedAt,new Date(now).toISOString());
+});

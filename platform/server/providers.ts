@@ -1,3 +1,4 @@
+import {DISCOVERY_REFRESH_MS} from '../shared/discovery.ts';
 import {handleGateway} from '../../lib/gateway.mjs';
 import {createSuwayomiClient} from '../../lib/suwayomi-config.mjs';
 import {Cache} from '../../lib/cache.mjs';
@@ -23,7 +24,7 @@ export class MangaDexProvider extends MangaProvider {
   readonly id='dex'; readonly languages:Language[]=['en','id']; readonly priority=40;
   async browse(options:BrowseOptions){
     const ratings=(options.preferences?.ratings||(options.metadataOnly?['safe','suggestive','erotica','pornographic']:['safe','suggestive'])).filter(r=>r!=='unrated');if(!ratings.length)return {mangas:[],hasNextPage:false};
-    return providerCache.remember('platform:live:dex:'+JSON.stringify([options.q,options.language,options.category,options.page,ratings,Boolean(options.metadataOnly)]),60,async()=>{
+    return providerCache.remember('platform:live:dex:'+JSON.stringify([options.q,options.language,options.category,options.page,ratings,Boolean(options.metadataOnly)]),DISCOVERY_REFRESH_MS/1000,async()=>{
       if(options.category==='trending'&&!options.q){const ranking=await liveRanking(options.language,ratings),offset=(options.page-1)*30;return {mangas:ranking.mangas.slice(offset,offset+30).map((m:Record<string,any>)=>wrap(this.id,m,options.language)),hasNextPage:offset+30<ranking.mangas.length};}
       const params:Record<string,unknown>={limit:30,offset:(options.page-1)*30,'availableTranslatedLanguage[]':options.language,'includes[]':['cover_art','author'],'contentRating[]':ratings,hasAvailableChapters:'true'};
       if(options.metadataOnly){delete params.hasAvailableChapters;delete params['availableTranslatedLanguage[]'];}

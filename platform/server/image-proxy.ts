@@ -7,6 +7,7 @@ import {proxyImage} from '../../lib/mangadex-image.mjs';
 import {proxyWebtoonImage} from '../../lib/webtoons.mjs';
 import {handleGatewayImage} from '../../lib/gateway.mjs';
 import {imageCache} from './image-cache.ts';
+import {coverImages} from './cover-images.ts';
 
 type ImageTicket={path:string};
 export function imageUrl(path:string){if(!path)return '';return '/api/proxy/image?url='+encodeURIComponent(seal('i',{path}));}
@@ -20,9 +21,9 @@ export async function proxyTicket(request:Request){let path:string;try{path=unse
 async function loadImage(path:string){
   try{const url=new URL(path,'https://internal');let response:Response;
     if(url.origin==='https://internal'&&url.pathname==='/api/gateway-image')response=await handleGatewayImage(new Request(url));
-    else if(url.origin==='https://internal'&&url.pathname==='/api/mangadex-image')response=await proxyImage(new Request(url));
+    else if(url.origin==='https://internal'&&url.pathname==='/api/mangadex-image')response=await coverImages.load(url.searchParams.get('url')||'');
     else if(url.origin==='https://internal'&&url.pathname==='/api/webtoon-image')response=await proxyWebtoonImage(new Request(url));
-    else if(url.hostname==='uploads.mangadex.org')response=await proxyImage(new Request('https://internal/api/mangadex-image?url='+encodeURIComponent(path)));
+    else if(url.hostname==='uploads.mangadex.org')response=await coverImages.load(path);
     else return new Response('Invalid image request',{status:400});
     if(!response.ok)return new Response('This page is temporarily unavailable',{status:502,headers:{'Cache-Control':'no-store'}});
     const headers=new Headers(response.headers);headers.set('Cache-Control','private, max-age=86400');headers.set('X-Content-Type-Options','nosniff');return new Response(response.body,{status:200,headers});

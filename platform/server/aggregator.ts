@@ -46,7 +46,7 @@ export class MangaAggregatorService {
       if(!succeeded||!unique.length&&partial)throw new Error('Catalog temporarily unavailable');
       const mangas=options.q?unique.map(item=>item.manga):catalogRank(unique,options.category);
       return {comics:mangas.map(publicComic),hasNextPage,partial};
-    });
+    },true);
     const type=({ja:'Manga',ko:'Manhwa',zh:'Manhua',other:'Other'} as Record<string,string>)[options.type||''];
     return {...snapshot.value,comics:snapshot.value.comics.filter(comic=>matchesPreferences(comic,preferences)&&(!type||comicType(comic.format)===type)),updatedAt:snapshot.updatedAt,refreshing:snapshot.refreshing,stale:snapshot.stale,refreshAfter:snapshot.refreshAfter};
   }
