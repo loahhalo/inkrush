@@ -13,6 +13,13 @@ test('page canvas and controls fit above mobile navigation on short and tall vie
   }
 });
 
+test('bottom mobile zoom controls reserve space without shrinking the desktop canvas',()=>{
+  for(const [height,top,nav] of [[668,220,61],[844,195,61],[720,145,0]]){
+    const desktop=pageFrameHeight(height,top,nav),mobile=pageFrameHeight(height,top,nav,48);
+    assert.equal(desktop-mobile,48);assert.ok(top+mobile+80+48<=height-nav+.01);
+  }
+});
+
 test('original swipe contract: left/right change page, up/down change chapter',()=>{
   assert.deepEqual(swipeAction(-180,12),{kind:'page',delta:1});
   assert.deepEqual(swipeAction(180,-12),{kind:'page',delta:-1});

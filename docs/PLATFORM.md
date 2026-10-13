@@ -73,7 +73,7 @@ Multi-source candidate lists use reciprocal-rank fusion `R = sum(1 / (20 + sourc
 
 The exact blocking theme script is in `platform/app/layout.tsx`. It runs in `<head>` before the body, sets `data-theme`, `color-scheme`, background and foreground CSS variables, and chooses an initial route-shaped skeleton. CSS is bundled with Next; system fonts avoid late font downloads. Server and first client render use the same deterministic shell. `Suspense` and `loading.tsx` provide matching skeleton cards. There is no demo-story render or mount-time full-layout replacement.
 
-Cards and skeletons share a 3:4 cover ratio and grid rules. Cover cards are whole-card anchors, with titles below covers and metadata only when known. The strip reader reserves page space using known dimensions or a 1:2 fallback, displays a spinner, fades in decoded images, and offers inline retry. When a page above the viewport changes its reserved height, its height delta is compensated. Exact heights cannot be guaranteed before a source supplies dimensions; the default ratio is an estimate.
+Cards and skeletons share a 3:4 cover ratio and grid rules. Cover cards are whole-card anchors, with titles below covers and metadata only when known. The strip reader reserves page space using known dimensions or a 1:2 fallback, shows chapter loading only, fades in decoded strip images, and offers inline retry. When a page above the viewport changes its reserved height, its height delta is compensated. Exact heights cannot be guaranteed before a source supplies dimensions; the default ratio is an estimate.
 
 ## Reader controls and Android installation
 
@@ -135,3 +135,9 @@ The catalog response excludes the full synopsis; details still return it. The br
 Covers use Next image optimization with responsive widths and WebP, retaining the original source artwork. The optimizer only accepts the authenticated same-origin image proxy path, and its disk cache is bounded to 128 MiB. Browser/source covers remain cached for one day. Full reader pages keep their original resolution and buffering path. Tests sampled a 1.98 MB original cover at approximately 40 KB for a 384 px thumbnail; actual size depends on artwork and device width.
 
 A bounded eight-entry, five-minute browser comic-detail cache coalesces title loads. Opening a chapter directly from its detail view carries that already-loaded comic/complete chapter list into the reader, avoiding a redundant detail request. Explicit retry bypasses the client cache, and old chapter deep links still use the server release-membership resolver. First visits to an uncached upstream title still need its complete merged chapter feed.
+
+## Reader page transitions and mobile zoom
+
+`PageStage` keeps the committed page layer visible while the requested image loads and decodes. The pending layer uses the same source key when it becomes visible, avoiding a remount or opacity fade through an empty frame. Rapid turns discard superseded pending layers; a failed next image exposes retry over the retained page. A spinner appears only while entering/changing a chapter until its first image is decoded. Individual paged and strip images have no loading spinner. Existing look-ahead buffering, swipe thresholds, chapter wheel behavior and page resolution remain unchanged.
+
+At widths up to 850 px, zoom controls sit directly below the canvas and above page controls. Desktop zoom stays in the toolbar. Canvas height reserves the mobile control row so it remains above fixed Android/browser navigation; fullscreen uses the same layout calculation. Pinch, double tap and keyboard zoom still use the existing handlers.

@@ -1,0 +1,3 @@
+'use client';
+import {Icon} from './shared.tsx';
+export default function ZoomControls({zoom,onZoom,className=''}:{zoom:number;onZoom:(value:number)=>void;className?:string}){return <div className={'reader-zoom '+className} role="group" aria-label="Page zoom"><button className="icon-button" aria-label="Zoom out" title="Zoom out (-)" disabled={zoom<=1} onClick={()=>onZoom(zoom-.25)}><Icon name="zoomOut"/></button><button className="zoom-reset" aria-label="Reset zoom" title="Fit page (0)" onClick={()=>onZoom(1)}>{Math.round(zoom*100)}%</button><button className="icon-button" aria-label="Zoom in" title="Zoom in (+)" disabled={zoom>=3} onClick={()=>onZoom(zoom+.25)}><Icon name="zoomIn"/></button></div>;}
