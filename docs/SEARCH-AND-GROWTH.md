@@ -14,6 +14,8 @@ Canonical public domain: https://inkrush.site . The Railway address remains comp
 
 ## Google Search Console
 
+Completed 14 October 2026: the owner approved HTML-tag verification for `https://inkrush.site/`. Google confirmed ownership and successfully processed `/sitemap.xml`, discovering 410 URLs. The verification tag remains in the root layout. The sitemap count is a current snapshot, not an indexed-page count. Google also accepted the homepage indexing request and added it to its priority crawl queue. Live browser verification confirmed a public comic landing page opens the existing chapter selector and loads a readable first page. All 101 tests pass; the production build and live HTTP checks pass.
+
 1. Add the URL-prefix property `https://inkrush.site/` in https://search.google.com/search-console . Use the owner's account.
 2. Install the exact HTML verification tag supplied by Google, after the owner approves granting that account verified-owner access. Keep it in the root layout; Google periodically checks it. Do not invent a token or remove other owners' tokens.
 3. Verify ownership, then submit `https://inkrush.site/sitemap.xml` in Sitemaps.
