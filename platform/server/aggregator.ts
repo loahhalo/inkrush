@@ -33,6 +33,7 @@ export function findChapter(chapters:Chapter[],id?:string){
 export class MangaAggregatorService {
   private getProviders:()=>Promise<MangaProvider[]>;
   constructor(getProviders=providers){this.getProviders=getProviders;}
+  async summary(id:string):Promise<Comic>{const ref=unseal<ProviderRef>('m',id);return cache.remember('platform:v1:summary:'+id,900,async()=>{const provider=(await this.getProviders()).find(p=>p.id===ref.provider&&p.languages.includes(ref.language));if(!provider)throw new Error('Edition unavailable');const metadata=await provider.metadata(ref.provider_internal_id,ref.language);const known=knownMetadata.get(metadataKey(metadata));return publicComic(known?mergeMetadata(metadata,known):metadata);});}
   private catalogCache=new LiveFeedCache<Pick<Catalog,'comics'|'hasNextPage'|'partial'>>();
   async catalog(options:BrowseOptions):Promise<Catalog>{
     const preferences=options.preferences||defaultPreferences(),key=JSON.stringify([options.q,options.language,options.category,options.page,preferences.ratings]);
