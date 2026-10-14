@@ -5,4 +5,5 @@ export type BrowseCategory=keyof typeof browseCategories;
 export function comicSlug(title:string){return title.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'').slice(0,90)||'comic';}
 export function comicPath(comic:{id:string;title:string}){return '/comics/'+encodeURIComponent(comic.id)+'/'+encodeURIComponent(comicSlug(comic.title));}
 export function jsonLd(value:unknown){return JSON.stringify(value).replace(/</g,'\\u003c');}
+export function comicSynopsis(description:string){return description.split(/(?:^|\n)\s*(?:Related Series(?:\(s\))?|Trackers?(?:\(s\))?|Links|Official links)\s*:/i)[0].trim().split(/\s+/).slice(0,160).join(' ');}
 export function comicDescription(comic:{title:string;format:string;language:string;genre:string[];author:string}){return `${comic.title}${comic.author?' by '+comic.author:''} on INKRUSH. ${comic.format} in ${comic.language==='id'?'Bahasa Indonesia':'English'}${comic.genre.length?' · '+comic.genre.slice(0,3).join(', '):''}. Explore the story and choose a chapter.`.slice(0,170);}
