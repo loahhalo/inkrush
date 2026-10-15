@@ -1,10 +1,11 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {ANALYTICS_ID,CONSENT_KEY,analyticsPage} from '../shared/measurement.ts';
-type Consent='yes'|'no'|null;
+import {watchConsent,parseConsent,type AnalyticsConsent} from '../shared/privacy-consent.ts';
+type Consent=AnalyticsConsent;
 type AnalyticsWindow=Window & {dataLayer?:unknown[];gtag?:(...args:unknown[])=>void};
 export default function VisitorAnalytics(){const [choice,setChoice]=useState<Consent>(null),[ready,setReady]=useState(false),[editing,setEditing]=useState(false);
-  useEffect(()=>{try{const value=localStorage.getItem(CONSENT_KEY);if(value==='yes'||value==='no')setChoice(value);}catch{}setReady(true);const edit=()=>setEditing(true);window.addEventListener('inkrush:privacy',edit);return ()=>window.removeEventListener('inkrush:privacy',edit);},[]);
+  useEffect(()=>{try{setChoice(parseConsent(localStorage.getItem(CONSENT_KEY)));}catch{}setReady(true);const edit=()=>setEditing(true);window.addEventListener('inkrush:privacy',edit);const stop=watchConsent(window,setChoice);return ()=>{window.removeEventListener('inkrush:privacy',edit);stop();};},[]);
   useEffect(()=>{if(choice!=='yes'||!/^G-[A-Z0-9]+$/.test(ANALYTICS_ID))return;const w=window as AnalyticsWindow;w.dataLayer=w.dataLayer||[];w.gtag=w.gtag||function(){w.dataLayer!.push(arguments);};(w as unknown as Record<string,unknown>)['ga-disable-'+ANALYTICS_ID]=false;
     w.gtag('consent','default',{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});w.gtag('js',new Date());w.gtag('config',ANALYTICS_ID,{send_page_view:false,allow_google_signals:false,allow_ad_personalization_signals:false,page_location:location.origin+'/',page_referrer:document.referrer?(()=>{try{return new URL(document.referrer).origin;}catch{return '';}})():''});
     if(!document.getElementById('inkrush-analytics-tag')){const script=document.createElement('script');script.id='inkrush-analytics-tag';script.async=true;script.src='https://www.googletagmanager.com/gtag/js?id='+ANALYTICS_ID;document.head.appendChild(script);}
