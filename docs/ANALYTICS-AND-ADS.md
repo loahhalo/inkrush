@@ -31,3 +31,7 @@ One-time setup, after actual publisher/inventory approval and content permission
 Equivalent commands: `node scripts/advertising.mjs status`, `node scripts/advertising.mjs on`, `node scripts/advertising.mjs off`. They use the existing linked project, reader service, production environment. No credentials are stored in the shortcuts or sent to browsers. Account approval, payment details and terms are not automated by the switch. Do not enable Google Auto ads without separately reviewing placements, as that could defeat the no-reader-ads design.
 
 No ad account has been created, no publisher approval claimed and no advertising enabled by this change.
+
+## Verified deployment
+
+Deployed commit 39d6690, Railway deployment 3bce0e51-2060-49f0-ab22-0baac0c5f59c. Production build and 105 tests passed. Live browser network inspection found zero Google tag/collection requests before consent; after opt-in, Google accepted page_view with HTTP 204. Hash navigation to Library sent one sanitized page_view. Google Realtime displayed one test visitor, one session_start and three page views (Privacy, Discover, Library). Privacy choices → No thanks followed by reload loaded no analytics tag. No advertising tag loaded. Advertising readiness predicates were unit-tested; a live activation-command test was rejected by automatic approval review and was not run. No ads were activated.
